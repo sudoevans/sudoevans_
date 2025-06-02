@@ -110,7 +110,7 @@ export default function GuestbookPage() {
           <h1 className="text-5xl sm:text-6xl md:text-8xl font-black mb-4">GUESTBOOK</h1>
           <div className="w-24 h-1 bg-black dark:bg-white mb-8"></div>
           <p className="text-lg sm:text-xl text-gray-600 dark:text-gray-400 mb-16 max-w-2xl">
-            Leave your mark. Share your thoughts on brutal design and minimalistic aesthetics.
+            Show some love and tell everyone you were here! Your thoughts and feedback mean a lot to me.
           </p>
 
           {/* Sign Form */}
