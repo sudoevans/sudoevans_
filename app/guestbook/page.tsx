@@ -3,7 +3,7 @@
 import type React from "react"
 
 import Link from "next/link"
-import { ArrowLeft, Send } from "lucide-react"
+import { ArrowLeft, Send, Trophy } from "lucide-react"
 import { useState, useEffect } from "react"
 import { submitGuestbookEntry, getGuestbookEntries, type GuestbookFormData } from "@/lib/actions/guestbook"
 import { LoadingSpinner } from "@/components/ui/loading-spinner"
@@ -24,12 +24,27 @@ export default function GuestbookPage() {
     location: "",
   })
 
+  const [firstThreeIds, setFirstThreeIds] = useState<string[]>([])
+
   const ITEMS_PER_PAGE = 10
   const totalPages = Math.max(1, Math.ceil(totalCount / ITEMS_PER_PAGE))
 
   useEffect(() => {
     fetchEntries()
   }, [currentPage])
+
+  useEffect(() => {
+    // Fetch first three entries only once
+    const fetchFirstThree = async () => {
+      try {
+        const { entries: firstThree } = await getGuestbookEntries(1, 3)
+        setFirstThreeIds(firstThree.map((e: any) => e.id))
+      } catch {
+        setFirstThreeIds([])
+      }
+    }
+    fetchFirstThree()
+  }, [])
 
   const fetchEntries = async () => {
     setIsLoading(true)
@@ -190,27 +205,48 @@ export default function GuestbookPage() {
               </div>
             ) : (
               <div className="space-y-6 mb-12">
-                {entries.map((entry) => (
-                  <div
-                    key={entry.id}
-                    className="border border-gray-400 dark:border-gray-600 p-6 hover:border-black dark:hover:border-white transition-colors"
-                  >
-                    <div className="flex justify-between items-start mb-4">
-                      <div>
-                        <h3 className="font-bold text-lg">{entry.name.toUpperCase()}</h3>
-                        {entry.location && (
-                          <p className="text-sm text-gray-600 dark:text-gray-400 font-mono">
-                            {entry.location.toUpperCase()}
-                          </p>
-                        )}
+                {entries.map((entry) => {
+                  const trophyIndex = firstThreeIds.indexOf(entry.id)
+                  return (
+                    <div
+                      key={entry.id}
+                      className="border border-gray-400 dark:border-gray-600 p-6 hover:border-black dark:hover:border-white transition-colors"
+                    >
+                      <div className="flex justify-between items-start mb-4">
+                        <div className="flex items-center gap-2">
+                          <h3 className="font-bold text-lg">{entry.name.toUpperCase()}</h3>
+                          {trophyIndex !== -1 && (
+                            <Trophy
+                              className={`w-5 h-5 ${
+                                trophyIndex === 0
+                                  ? "text-yellow-500"
+                                  : trophyIndex === 1
+                                  ? "text-gray-400"
+                                  : "text-amber-700"
+                              }`}
+                              aria-label={
+                                trophyIndex === 0
+                                  ? "First guest"
+                                  : trophyIndex === 1
+                                  ? "Second guest"
+                                  : "Third guest"
+                              }
+                            />
+                          )}
+                        </div>
+                        <span className="text-sm text-gray-600 dark:text-gray-400 font-mono">
+                          {new Date(entry.created_at).toLocaleDateString()}
+                        </span>
                       </div>
-                      <span className="text-sm text-gray-600 dark:text-gray-400 font-mono">
-                        {new Date(entry.created_at).toLocaleDateString()}
-                      </span>
+                      {entry.location && (
+                        <p className="text-sm text-gray-600 dark:text-gray-400 font-mono">
+                          {entry.location.toUpperCase()}
+                        </p>
+                      )}
+                      <p className="text-gray-700 dark:text-gray-300 leading-relaxed">{entry.message}</p>
                     </div>
-                    <p className="text-gray-700 dark:text-gray-300 leading-relaxed">{entry.message}</p>
-                  </div>
-                ))}
+                  )
+                })}
               </div>
             )}
 
