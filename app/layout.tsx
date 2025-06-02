@@ -13,7 +13,7 @@ const syne = Syne({
 export const metadata: Metadata = {
   title: "Evans Kiptoo Cheruiyot - Portfolio",
   description: "Minimalistic brutal morphic design portfolio",
-    generator: 'v0.dev'
+  generator: 'sudoevans',
 }
 
 export default function RootLayout({
@@ -23,7 +23,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={`${syne.variable} font-sans`}>
+      <body className={`${syne.variable} font-sans`} suppressHydrationWarning>
         <ThemeProvider defaultTheme="dark">{children}</ThemeProvider>
       </body>
     </html>
