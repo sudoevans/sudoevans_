@@ -97,9 +97,9 @@ export default function ResourcesPage() {
         <div className="max-w-6xl mx-auto">
           <h1 className="text-5xl sm:text-6xl md:text-8xl font-black mb-4">RESOURCES</h1>
           <div className="w-24 h-1 bg-black dark:bg-white mb-8"></div>
-          <p className="text-lg sm:text-xl text-gray-600 dark:text-gray-400 mb-16 max-w-2xl">
-            Tools, templates, inspiration, and insights for brutal design systems and minimalistic interfaces.
-          </p>
+            <p className="text-lg sm:text-xl text-gray-600 dark:text-gray-400 mb-16 max-w-2xl">
+            By developers, for developers! Browse what others have submitted or contribute your own favorite finds to help the community :)
+            </p>
 
           {/* Submit Form */}
           {showSubmitForm ? (
