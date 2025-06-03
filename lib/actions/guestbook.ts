@@ -23,6 +23,11 @@ export interface GuestbookFormData {
 
 export async function submitGuestbookEntry(formData: GuestbookFormData) {
   try {
+    // Enforce limits on server side
+    const name = formData.name.trim().slice(0, 32)
+    const message = formData.message.trim().slice(0, 180)
+    const location = formData.location?.trim().slice(0, 32) || null
+
     const supabase = createActionClient()
     const headersList = headers()
 
@@ -35,9 +40,9 @@ export async function submitGuestbookEntry(formData: GuestbookFormData) {
     const { data, error } = await supabase
       .from("guestbook_entries")
       .insert({
-        name: formData.name.trim(),
-        message: formData.message.trim(),
-        location: formData.location?.trim() || null,
+        name,
+        message,
+        location,
         ip_address: ipAddress,
         user_agent: userAgent,
       })
@@ -48,13 +53,13 @@ export async function submitGuestbookEntry(formData: GuestbookFormData) {
     }
 
     revalidatePath("/guestbook")
-    return { success: true, message: "Thank you for signing the guestbook!" }
+    return { success: true, message: "Thank you for signing my guestbook!" }
   } catch (error) {
     return { success: false, message: "Failed to submit entry" }
   }
 }
 
-export async function getGuestbookEntries(page = 1, limit = 10) {
+export async function getGuestbookEntries(page = 1, limit = 10, order: "asc" | "desc" = "desc") {
   try {
     const supabase = createActionClient()
     const offset = (page - 1) * limit
@@ -66,7 +71,7 @@ export async function getGuestbookEntries(page = 1, limit = 10) {
     } = await supabase
       .from("guestbook_entries")
       .select("*", { count: "exact" })
-      .order("created_at", { ascending: false })
+      .order("created_at", { ascending: order === "asc" })
       .range(offset, offset + limit - 1)
 
     if (error) {

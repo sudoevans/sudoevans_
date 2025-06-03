@@ -37,7 +37,8 @@ export default function GuestbookPage() {
     // Fetch first three entries only once
     const fetchFirstThree = async () => {
       try {
-        const { entries: firstThree } = await getGuestbookEntries(1, 3)
+        // Fetch the first 3 entries by oldest first
+        const { entries: firstThree } = await getGuestbookEntries(1, 3, "asc")
         setFirstThreeIds(firstThree.map((e: any) => e.id))
       } catch {
         setFirstThreeIds([])
@@ -125,7 +126,7 @@ export default function GuestbookPage() {
           <h1 className="text-5xl sm:text-6xl md:text-8xl font-black mb-4">GUESTBOOK</h1>
           <div className="w-24 h-1 bg-black dark:bg-white mb-8"></div>
           <p className="text-lg sm:text-xl text-gray-600 dark:text-gray-400 mb-16 max-w-2xl">
-            Show some love and tell everyone you were here! Your thoughts and feedback mean a lot to me.
+            Show some love and tell everyone you were here! Be honourable :)
           </p>
 
           {/* Sign Form */}
@@ -143,6 +144,7 @@ export default function GuestbookPage() {
                     placeholder="YOUR NAME"
                     required
                     disabled={isSubmitting}
+                    maxLength={32} // Limit name to 32 characters
                   />
                 </div>
                 <div>
@@ -154,6 +156,7 @@ export default function GuestbookPage() {
                     className="w-full bg-transparent border-2 border-gray-400 dark:border-gray-600 p-3 focus:border-black dark:focus:border-white outline-none transition-colors font-mono"
                     placeholder="CITY, COUNTRY"
                     disabled={isSubmitting}
+                    maxLength={32} // Limit location to 32 characters
                   />
                 </div>
               </div>
@@ -166,6 +169,7 @@ export default function GuestbookPage() {
                   placeholder="SHARE YOUR THOUGHTS..."
                   required
                   disabled={isSubmitting}
+                  maxLength={180} // Limit message to 180 characters
                 />
               </div>
               <button
@@ -204,50 +208,67 @@ export default function GuestbookPage() {
                 <p className="text-gray-600 dark:text-gray-400">Be the first to sign the guestbook!</p>
               </div>
             ) : (
-              <div className="space-y-6 mb-12">
-                {entries.map((entry) => {
-                  const trophyIndex = firstThreeIds.indexOf(entry.id)
-                  return (
-                    <div
-                      key={entry.id}
-                      className="border border-gray-400 dark:border-gray-600 p-6 hover:border-black dark:hover:border-white transition-colors"
-                    >
-                      <div className="flex justify-between items-start mb-4">
-                        <div className="flex items-center gap-2">
-                          <h3 className="font-bold text-lg">{entry.name.toUpperCase()}</h3>
-                          {trophyIndex !== -1 && (
-                            <Trophy
-                              className={`w-5 h-5 ${
-                                trophyIndex === 0
-                                  ? "text-yellow-500"
-                                  : trophyIndex === 1
-                                  ? "text-gray-400"
-                                  : "text-amber-700"
-                              }`}
-                              aria-label={
-                                trophyIndex === 0
-                                  ? "First guest"
-                                  : trophyIndex === 1
-                                  ? "Second guest"
-                                  : "Third guest"
-                              }
-                            />
+              (() => {
+                // Get trophy entries in the correct order
+                const trophyEntries = firstThreeIds
+                  .map(id => entries.find(e => e.id === id))
+                  .filter(Boolean);
+
+                // Get the rest, excluding trophy entries
+                const restEntries = entries
+                  .filter(e => !firstThreeIds.includes(e.id))
+                  .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+
+                // Combine for display
+                const displayEntries = [...trophyEntries, ...restEntries];
+
+                return (
+                  <div className="space-y-6 mb-12">
+                    {displayEntries.map((entry) => {
+                      const trophyIndex = firstThreeIds.indexOf(entry.id)
+                      return (
+                        <div
+                          key={entry.id}
+                          className="border border-gray-400 dark:border-gray-600 p-6 hover:border-black dark:hover:border-white transition-colors"
+                        >
+                          <div className="flex justify-between items-start mb-4">
+                            <div className="flex items-center gap-2">
+                              <h3 className="font-bold text-lg">{entry.name.toUpperCase()}</h3>
+                              {trophyIndex !== -1 && (
+                                <Trophy
+                                  className={`w-5 h-5 ${
+                                    trophyIndex === 0
+                                      ? "text-yellow-500"
+                                      : trophyIndex === 1
+                                      ? "text-gray-400"
+                                      : "text-amber-700"
+                                  }`}
+                                  aria-label={
+                                    trophyIndex === 0
+                                      ? "First guest"
+                                      : trophyIndex === 1
+                                      ? "Second guest"
+                                      : "Third guest"
+                                  }
+                                />
+                              )}
+                            </div>
+                            <span className="text-sm text-gray-600 dark:text-gray-400 font-mono">
+                              {new Date(entry.created_at).toLocaleDateString()}
+                            </span>
+                          </div>
+                          {entry.location && (
+                            <p className="text-sm text-gray-600 dark:text-gray-400 font-mono">
+                              {entry.location.toUpperCase()}
+                            </p>
                           )}
+                          <p className="text-gray-700 dark:text-gray-300 leading-relaxed">{entry.message}</p>
                         </div>
-                        <span className="text-sm text-gray-600 dark:text-gray-400 font-mono">
-                          {new Date(entry.created_at).toLocaleDateString()}
-                        </span>
-                      </div>
-                      {entry.location && (
-                        <p className="text-sm text-gray-600 dark:text-gray-400 font-mono">
-                          {entry.location.toUpperCase()}
-                        </p>
-                      )}
-                      <p className="text-gray-700 dark:text-gray-300 leading-relaxed">{entry.message}</p>
-                    </div>
-                  )
-                })}
-              </div>
+                      )
+                    })}
+                  </div>
+                )
+              })()
             )}
 
             {/* Pagination */}
