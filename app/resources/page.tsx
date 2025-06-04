@@ -25,7 +25,10 @@ export default function ResourcesPage() {
   const { showToast, ToastContainer } = useToast()
 
   const categories: (ResourceCategory | "")[] = ["", "DESIGN SYSTEMS", "CODE TEMPLATES", "INSPIRATION", "BLOGS"]
-  const totalPages = Math.max(1, Math.ceil(totalCount / ITEMS_PER_PAGE))
+  
+  // Fix: Use resources.length as fallback if totalCount is not set properly
+  const effectiveTotalCount = totalCount > 0 ? totalCount : resources.length
+  const totalPages = Math.max(1, Math.ceil(effectiveTotalCount / ITEMS_PER_PAGE))
 
   const fetchResources = async () => {
     setIsLoading(true)
@@ -49,13 +52,25 @@ export default function ResourcesPage() {
         return
       }
 
-      setResources(fetchedResources)
-      setTotalCount(count)
+      console.log('API Response:', { 
+        resourcesLength: fetchedResources?.length || 0, 
+        count, 
+        currentPage,
+        searchTerm,
+        selectedCategory 
+      }) // Debug log
+
+      setResources(fetchedResources || [])
+      // Fix: Ensure count is properly set, use resources length as fallback
+      setTotalCount(typeof count === 'number' ? count : (fetchedResources?.length || 0))
     } catch (error) {
+      console.error('Error fetching resources:', error) // Debug log
       showToast({
         message: "Failed to load resources",
         type: "error",
       })
+      setResources([])
+      setTotalCount(0)
     } finally {
       setIsLoading(false)
     }
@@ -75,6 +90,16 @@ export default function ResourcesPage() {
     setSelectedCategory(category)
     setCurrentPage(1)
   }
+
+  // Debug: Log current state
+  console.log('Current state:', { 
+    resourcesLength: resources.length, 
+    totalCount, 
+    effectiveTotalCount,
+    totalPages,
+    currentPage,
+    isLoading 
+  })
 
   return (
     <div className="min-h-screen bg-white dark:bg-black text-black dark:text-white">
@@ -151,8 +176,8 @@ export default function ResourcesPage() {
                     ? "NO RESOURCES FOUND"
                     : `SHOWING ${(currentPage - 1) * ITEMS_PER_PAGE + 1}-${Math.min(
                         currentPage * ITEMS_PER_PAGE,
-                        totalCount,
-                      )} OF ${totalCount} RESOURCES`}
+                        effectiveTotalCount,
+                      )} OF ${effectiveTotalCount} RESOURCES`}
               </div>
               {!showSubmitForm && (
                 <button
@@ -191,7 +216,7 @@ export default function ResourcesPage() {
           </div>
 
           {/* Pagination */}
-          {!isLoading && totalPages > 1 && (
+          {!isLoading && resources.length > 0 && totalPages > 1 && (
             <div className="flex justify-center items-center gap-4 mb-16">
               <button
                 onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
