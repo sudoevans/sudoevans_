@@ -27,7 +27,7 @@ export default function GuestbookPage() {
   const [firstThreeIds, setFirstThreeIds] = useState<string[]>([])
   const [trophyEntries, setTrophyEntries] = useState<any[]>([])
 
-  const ITEMS_PER_PAGE = 10
+  const ITEMS_PER_PAGE = 7
   const totalPages = Math.max(1, Math.ceil(totalCount / ITEMS_PER_PAGE))
 
   useEffect(() => {
@@ -212,13 +212,21 @@ export default function GuestbookPage() {
               </div>
             ) : (
               (() => {
-                // Remove trophy entries from paginated entries
-                const restEntries = entries
-                  .filter(e => !firstThreeIds.includes(e.id))
-                  .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+                // 1) Filter out any trophy IDs from the paginated "entries" array
+                const restEntries = entries.filter(e => !firstThreeIds.includes(e.id))
 
-                // Combine for display: always show trophyEntries first, in correct order
-                const displayEntries = [...trophyEntries, ...restEntries]
+                // 2) Sort the remaining (non-trophy) entries by newest first
+                restEntries.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+
+                // 3) Build a single "display" array.
+                //    Only on page 1 do we prepend the trophyEntries.
+                let displayEntries: any[] = []
+                if (currentPage === 1) {
+                  // Prepend the three trophy entries (oldest first) before the rest
+                  displayEntries = [...trophyEntries, ...restEntries]
+                } else {
+                  displayEntries = restEntries
+                }
 
                 return (
                   <div className="space-y-6 mb-12">
