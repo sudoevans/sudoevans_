@@ -70,7 +70,7 @@ export async function getGuestbookEntries(page = 1, limit = 10, order: "asc" | "
       count,
     } = await supabase
       .from("guestbook_entries")
-      .select("*", { count: "exact" })
+      .select("id, name, message, location, created_at", { count: "exact" }) // Only public fields
       .order("created_at", { ascending: order === "asc" })
       .range(offset, offset + limit - 1)
 
@@ -78,7 +78,8 @@ export async function getGuestbookEntries(page = 1, limit = 10, order: "asc" | "
       return { entries: [], count: 0, error: error.message }
     }
 
-    return { entries: entries as GuestbookEntry[], count: count || 0, error: null }
+    // Entries will not include ip_address or user_agent
+    return { entries: entries as Omit<GuestbookEntry, 'ip_address' | 'user_agent'>[], count: count || 0, error: null }
   } catch (error) {
     return { entries: [], count: 0, error: "Failed to fetch guestbook entries" }
   }
