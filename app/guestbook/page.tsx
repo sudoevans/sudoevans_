@@ -25,6 +25,7 @@ export default function GuestbookPage() {
   })
 
   const [firstThreeIds, setFirstThreeIds] = useState<string[]>([])
+  const [trophyEntries, setTrophyEntries] = useState<any[]>([])
 
   const ITEMS_PER_PAGE = 10
   const totalPages = Math.max(1, Math.ceil(totalCount / ITEMS_PER_PAGE))
@@ -40,8 +41,10 @@ export default function GuestbookPage() {
         // Fetch the first 3 entries by oldest first
         const { entries: firstThree } = await getGuestbookEntries(1, 3, "asc")
         setFirstThreeIds(firstThree.map((e: any) => e.id))
+        setTrophyEntries(firstThree)
       } catch {
         setFirstThreeIds([])
+        setTrophyEntries([])
       }
     }
     fetchFirstThree()
@@ -209,18 +212,13 @@ export default function GuestbookPage() {
               </div>
             ) : (
               (() => {
-                // Get trophy entries in the correct order
-                const trophyEntries = firstThreeIds
-                  .map(id => entries.find(e => e.id === id))
-                  .filter(Boolean);
-
-                // Get the rest, excluding trophy entries
+                // Remove trophy entries from paginated entries
                 const restEntries = entries
                   .filter(e => !firstThreeIds.includes(e.id))
-                  .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+                  .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
 
-                // Combine for display
-                const displayEntries = [...trophyEntries, ...restEntries];
+                // Combine for display: always show trophyEntries first, in correct order
+                const displayEntries = [...trophyEntries, ...restEntries]
 
                 return (
                   <div className="space-y-6 mb-12">
